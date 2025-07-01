@@ -62,10 +62,13 @@ def main():
         ds = CustomDataset(args, args.data_dir, transform_train)
         args.in_ch = 4
 
+    if len(ds) == 0:
+        raise ValueError(f"No data found in directory: {args.data_dir}")
+
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
-        shuffle=True
+        shuffle=True,
     )
     data = iter(datal)
 
