@@ -40,6 +40,7 @@ class TrainLoop:
         schedule_sampler=None,
         weight_decay=0.0,
         lr_anneal_steps=0,
+        use_wandb=False,
     ):
         self.model = model
         self.dataloader = dataloader
@@ -60,6 +61,7 @@ class TrainLoop:
         self.schedule_sampler = schedule_sampler or UniformSampler(diffusion)
         self.weight_decay = weight_decay
         self.lr_anneal_steps = lr_anneal_steps
+        self.use_wandb = use_wandb
 
         self.step = 0
         self.resume_step = 0
@@ -142,7 +144,10 @@ class TrainLoop:
             self.run_step(batch, cond)
             i += 1
             if self.step % self.log_interval == 0:
-                logger.dumpkvs()
+                metrics = logger.dumpkvs()
+                if self.use_wandb:
+                    import wandb
+                    wandb.log(metrics, step=self.step + self.resume_step)
             if self.step % self.save_interval == 0:
                 self.save()
                 if os.environ.get("DIFFUSION_TRAINING_TEST", "") and self.step > 0:
