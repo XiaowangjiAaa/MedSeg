@@ -9,7 +9,7 @@ sys.path.append("./")
 
 import torch as th
 import torchvision.transforms as transforms
-from visdom import Visdom
+import wandb
 from guided_diffusion import dist_util, logger
 from guided_diffusion.resample import create_named_schedule_sampler
 from guided_diffusion.bratsloader import BRATSDataset, BRATSDataset3D
@@ -22,8 +22,6 @@ from guided_diffusion.script_util import (
 )
 from guided_diffusion.train_util import TrainLoop
 
-viz = Visdom(port=8850, use_incoming_socket=False)
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='config/train_config.yaml', help='Path to training config YAML')
@@ -35,6 +33,8 @@ def main():
     defaults = create_defaults()
     defaults.update(cfg)
     args = Namespace(**defaults)
+
+    wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=defaults)
 
     accelerator = Accelerator(fp16=args.use_fp16)
 
@@ -73,6 +73,7 @@ def main():
     )
 
     model.to(accelerator.device)
+    wandb.watch(model, log="all")
 
     schedule_sampler = create_named_schedule_sampler(
         args.schedule_sampler, diffusion, maxt=args.diffusion_steps
@@ -97,6 +98,7 @@ def main():
         schedule_sampler=schedule_sampler,
         weight_decay=args.weight_decay,
         lr_anneal_steps=args.lr_anneal_steps,
+        use_wandb=True,
     ).run_loop()
 
 def create_defaults():
@@ -117,7 +119,9 @@ def create_defaults():
         fp16_scale_growth=1e-3,
         gpu_dev="0",
         multi_gpu="0,1",
-        out_dir='./results/'
+        out_dir='./results/',
+        wandb_project='MedSeg',
+        wandb_run_name='training'
     )
     defaults.update(model_and_diffusion_defaults())
     return defaults

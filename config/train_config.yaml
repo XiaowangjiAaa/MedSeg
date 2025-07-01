@@ -43,3 +43,5 @@ use_kl: false
 predict_xstart: true
 rescale_timesteps: false
 rescale_learned_sigmas: false
+wandb_project: MedSeg
+wandb_run_name: training
