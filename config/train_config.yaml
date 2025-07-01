@@ -1,0 +1,19 @@
+# Training configuration for accelerate training
+# Basic dataset and training parameters
+data_name: BRATS
+data_dir: "../dataset/brats2020/training"
+schedule_sampler: "uniform"
+lr: 1e-4
+weight_decay: 0.0
+lr_anneal_steps: 0
+batch_size: 1
+microbatch: -1
+ema_rate: "0.9999"
+log_interval: 100
+save_interval: 5000
+resume_checkpoint: null
+use_fp16: false
+fp16_scale_growth: 0.001
+gpu_dev: "0"
+multi_gpu: "0,1"
+out_dir: './results/'
