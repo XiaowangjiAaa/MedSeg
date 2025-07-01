@@ -18,6 +18,11 @@ def setup_dist(args):
     if dist.is_initialized():
         return
 
+    # Skip initialization if running without distributed environment variables
+    if os.environ.get("RANK") is None and os.environ.get("WORLD_SIZE") is None:
+        print("Distributed environment variables not set. Running in single process mode.")
+        return
+
     backend = "nccl" if th.cuda.is_available() else "gloo"
     dist.init_process_group(backend=backend, init_method="env://")
     th.cuda.set_device(dev().index)
