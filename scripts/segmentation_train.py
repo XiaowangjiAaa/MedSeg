@@ -36,7 +36,9 @@ def main():
 
     wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=defaults)
 
-    accelerator = Accelerator(fp16=args.use_fp16)
+    accelerator = Accelerator(
+        mixed_precision="fp16" if args.use_fp16 else "no"
+    )
 
     dist_util.setup_dist(args)
     logger.configure(dir=args.out_dir)
@@ -60,10 +62,13 @@ def main():
         ds = CustomDataset(args, args.data_dir, transform_train)
         args.in_ch = 4
 
+    if len(ds) == 0:
+        raise ValueError(f"No data found in directory: {args.data_dir}")
+
     datal = th.utils.data.DataLoader(
         ds,
         batch_size=args.batch_size,
-        shuffle=True
+        shuffle=True,
     )
     data = iter(datal)
 
