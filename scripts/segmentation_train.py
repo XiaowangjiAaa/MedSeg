@@ -1,5 +1,9 @@
 import sys
 import argparse
+import yaml
+from argparse import Namespace
+from accelerate import Accelerator
+
 sys.path.append("../")
 sys.path.append("./")
 
@@ -15,14 +19,24 @@ from guided_diffusion.script_util import (
     model_and_diffusion_defaults,
     create_model_and_diffusion,
     args_to_dict,
-    add_dict_to_argparser,
 )
 from guided_diffusion.train_util import TrainLoop
 
 viz = Visdom(port=8850, use_incoming_socket=False)
 
 def main():
-    args = create_argparser().parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, default='config/train_config.yaml', help='Path to training config YAML')
+    cmd_args = parser.parse_args()
+
+    with open(cmd_args.config, 'r') as f:
+        cfg = yaml.safe_load(f)
+
+    defaults = create_defaults()
+    defaults.update(cfg)
+    args = Namespace(**defaults)
+
+    accelerator = Accelerator(fp16=args.use_fp16)
 
     dist_util.setup_dist(args)
     logger.configure(dir=args.out_dir)
@@ -58,13 +72,13 @@ def main():
         **args_to_dict(args, model_and_diffusion_defaults().keys())
     )
 
-    model.to(dist_util.dev())
+    model.to(accelerator.device)
 
     schedule_sampler = create_named_schedule_sampler(
         args.schedule_sampler, diffusion, maxt=args.diffusion_steps
     )
 
-    logger.log("training...")
+    accelerator.print("training...")
     TrainLoop(
         model=model,
         diffusion=diffusion,
@@ -85,7 +99,7 @@ def main():
         lr_anneal_steps=args.lr_anneal_steps,
     ).run_loop()
 
-def create_argparser():
+def create_defaults():
     defaults = dict(
         data_name='BRATS',
         data_dir="../dataset/brats2020/training",
@@ -106,9 +120,7 @@ def create_argparser():
         out_dir='./results/'
     )
     defaults.update(model_and_diffusion_defaults())
-    parser = argparse.ArgumentParser()
-    add_dict_to_argparser(parser, defaults)
-    return parser
+    return defaults
 
 if __name__ == "__main__":
     main()

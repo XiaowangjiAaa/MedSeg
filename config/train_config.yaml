@@ -1,0 +1,45 @@
+# Training configuration for accelerate training
+# Basic dataset and training parameters
+data_name: BRATS
+data_dir: "../dataset/brats2020/training"
+schedule_sampler: "uniform"
+lr: 1e-4
+weight_decay: 0.0
+lr_anneal_steps: 0
+batch_size: 1
+microbatch: -1
+ema_rate: "0.9999"
+log_interval: 100
+save_interval: 5000
+resume_checkpoint: null
+use_fp16: false
+fp16_scale_growth: 1e-3
+gpu_dev: "0"
+multi_gpu: "0,1"
+out_dir: "./results/"
+# Model and diffusion defaults
+image_size: 64
+num_channels: 128
+num_res_blocks: 2
+num_heads: 4
+in_ch: 5
+num_heads_upsample: -1
+num_head_channels: -1
+attention_resolutions: "16,8"
+channel_mult: ""
+dropout: 0.0
+class_cond: false
+use_checkpoint: false
+use_scale_shift_norm: true
+resblock_updown: false
+use_new_attention_order: false
+dpm_solver: false
+version: "new"
+learn_sigma: false
+diffusion_steps: 1000
+noise_schedule: "linear"
+timestep_respacing: ""
+use_kl: false
+predict_xstart: true
+rescale_timesteps: false
+rescale_learned_sigmas: false
