@@ -36,7 +36,9 @@ def main():
 
     wandb.init(project=args.wandb_project, name=args.wandb_run_name, config=defaults)
 
-    accelerator = Accelerator(fp16=args.use_fp16)
+    accelerator = Accelerator(
+        mixed_precision="fp16" if args.use_fp16 else "no"
+    )
 
     dist_util.setup_dist(args)
     logger.configure(dir=args.out_dir)
